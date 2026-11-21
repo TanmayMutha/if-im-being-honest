@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>if im being honest</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<meta name="theme-color" content="#1f3a5f">
+<style>
+:root{--bg:#eef1f4;--surface:#fff;--ink:#1b2430;--muted:#66717f;--line:#d3d9e0;--accent:#1f3a5f;--on-accent:#fff;--warn:#9a3b2e;color-scheme:light;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a22;--surface:#1c2430;--ink:#e6ebf1;--muted:#93a0b0;--line:#2e3948;--accent:#8fb4e3;--on-accent:#10161e;--warn:#e08a7c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141a22;--surface:#1c2430;--ink:#e6ebf1;--muted:#93a0b0;--line:#2e3948;--accent:#8fb4e3;--on-accent:#10161e;--warn:#e08a7c;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px}
+h1{font:italic 600 1.6rem/1.2 Georgia,"Times New Roman",serif;margin:0}
+.sub{color:var(--muted);font-size:.85rem}
+label,.lbl{display:block;font-size:.85rem;color:var(--muted);margin:18px 0 6px}
+input,select,textarea,button{font:inherit;color:inherit}
+input[type=text],input[type=date],input[type=time],select,textarea{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+textarea{min-height:200px;resize:vertical;font:1.05rem/1.65 Georgia,"Times New Roman",serif}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px}.row>*{flex:1}.row>.fit{flex:0 0 auto}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:10px 14px}
+button.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border-radius:999px;padding:6px 12px;font-size:.9rem}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.slider{display:grid;grid-template-columns:5.5rem 1fr 5.5rem;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);margin-top:8px}
+.slider span:last-child{text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+#preview{max-width:100%;max-height:220px;border-radius:6px;margin-top:8px;display:none}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar>div{max-width:640px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.bar button.primary{flex:0 0 auto;padding:12px 28px}
+#status{flex:1;font-size:.85rem;color:var(--muted)}
+#status.err{color:var(--warn)}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:min(440px,92vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.hint{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+ <header>
+  <div><h1>if im being honest</h1><div class="sub" id="pending"></div></div>
+  <button id="openSettings" type="button" aria-label="Settings">Settings</button>
+ </header>
+
+ <label for="heading">Heading</label>
+ <input type="text" id="heading" autocomplete="off">
+
+ <div class="row" style="align-items:end">
+  <div><label for="date">Date</label><input type="date" id="date"></div>
+  <div><label for="time">Time</label><input type="time" id="time"></div>
+  <div class="fit"><button type="button" id="now">Use now</button></div>
+ </div>
+
+ <label for="category">Category</label>
+ <div class="row"><select id="category"></select><button type="button" class="fit" id="addCat">Add category</button></div>
+
+ <div class="lbl">How are you feeling?</div>
+ <div class="chips" id="core" role="group" aria-label="Core feeling"></div>
+ <div class="chips" id="specific" role="group" aria-label="Specific feeling" style="margin-top:8px"></div>
+ <div class="slider"><span>Unpleasant</span><input type="range" id="valence" min="-2" max="2" step="1" value="0" aria-label="Pleasantness"><span>Pleasant</span></div>
+ <div class="slider"><span>Low energy</span><input type="range" id="arousal" min="-2" max="2" step="1" value="0" aria-label="Energy"><span>High energy</span></div>
+
+ <label for="body">What’s on your mind?</label>
+ <textarea id="body"></textarea>
+
+ <div class="lbl">Photo</div>
+ <input type="file" id="photo" accept="image/*">
+ <img id="preview" alt="Selected photo preview">
+</main>
+
+<div class="bar"><div><span id="status" role="status"></span><button class="primary" id="save" type="button">Save entry</button></div></div>
+
+<dialog id="settings">
+ <h2 style="margin:0 0 4px;font-size:1.1rem">GitHub sync</h2>
+ <label for="owner">Username</label><input type="text" id="owner">
+ <label for="repo">Data repo</label><input type="text" id="repo">
+ <label for="branch">Branch</label><input type="text" id="branch">
+ <label for="token">Access token</label><input type="text" id="token" autocomplete="off" spellcheck="false">
+ <p class="hint">The token stays on this device only. Use a fine-grained token limited to the data repo, with Contents set to read and write.</p>
+ <div class="row" style="margin-top:16px"><button type="button" id="cancelS">Cancel</button><button type="button" class="primary" id="saveS">Save settings</button></div>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const FEEL={
+ Happy:["Playful","Content","Interested","Proud","Accepted","Powerful","Peaceful","Trusting","Optimistic"],
+ Sad:["Lonely","Vulnerable","Despair","Guilty","Depressed","Hurt"],
+ Angry:["Let down","Humiliated","Bitter","Mad","Aggressive","Frustrated","Distant","Critical"],
+ Fearful:["Scared","Anxious","Insecure","Weak","Rejected","Threatened"],
+ Surprised:["Startled","Confused","Amazed","Excited"],
+ Disgusted:["Disapproving","Disappointed","Awful","Repelled"],
+ Bad:["Tired","Stressed","Busy","Bored"]
+};
+const DEFCATS=["Thoughts","Reflection","Gratitude","Ideas","Decisions","Worries","Wins","Career","People","Learning","Values","Dreams and goals","Rant","Random"];
+const LS={get:(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+
+/* offline queue (IndexedDB) */
+const dbp=new Promise((res,rej)=>{const r=indexedDB.open("iibh",1);r.onupgradeneeded=()=>r.result.createObjectStore("q",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const tx=async(mode,fn)=>{const d=await dbp;return new Promise((res,rej)=>{const t=d.transaction("q",mode);const o=fn(t.objectStore("q"));t.oncomplete=()=>res(o&&o.result);t.onerror=()=>rej(t.error)})};
+const qAll=()=>tx("readonly",s=>s.getAll()),qPut=e=>tx("readwrite",s=>s.put(e)),qDel=id=>tx("readwrite",s=>s.delete(id));
+
+/* form state */
+let core=null,specific=null,touched=false,photoB64=null;
+const pad=n=>String(n).padStart(2,"0");
+function setNow(){const d=new Date();$("#date").value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;$("#time").value=`${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function status(t,err){const s=$("#status");s.textContent=t;s.className=err?"err":""}
+async function count(){const n=(await qAll()).length;$("#pending").textContent=n?`${n} waiting to sync`:"All entries synced"}
+
+function renderCats(){const c=LS.get("cats",DEFCATS),cur=$("#category").value;$("#category").innerHTML=c.map(x=>`<option>${x}</option>`).join("");if(c.includes(cur))$("#category").value=cur}
+$("#addCat").onclick=()=>{const n=(prompt("New category name")||"").trim();if(!n)return;const c=LS.get("cats",DEFCATS);if(!c.includes(n))c.push(n);LS.set("cats",c);renderCats();$("#category").value=n};
+
+function chips(el,list,sel,cb){el.innerHTML="";list.forEach(x=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=x;b.setAttribute("aria-pressed",x===sel);b.onclick=()=>cb(x===sel?null:x);el.appendChild(b)})}
+function renderFeel(){chips($("#core"),Object.keys(FEEL),core,x=>{core=x;specific=null;renderFeel()});chips($("#specific"),core?FEEL[core]:[],specific,x=>{specific=x;renderFeel()})}
+["#valence","#arousal"].forEach(s=>$(s).addEventListener("input",()=>touched=true));
+$("#now").onclick=setNow;
+
+$("#photo").onchange=async e=>{const f=e.target.files[0];if(!f){photoB64=null;$("#preview").style.display="none";return}
+ try{const bmp=await createImageBitmap(f),k=Math.min(1,1280/Math.max(bmp.width,bmp.height)),c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  const url=c.toDataURL("image/jpeg",.8);photoB64=url.split(",")[1];$("#preview").src=url;$("#preview").style.display="block"}catch{status("Couldn’t read that photo. Try another one.",true)}};
+
+/* GitHub sync */
+const b64=s=>{const u=new TextEncoder().encode(s);let bin="";u.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin)};
+async function put(path,content,msg){const c=LS.get("cfg",{});
+ const r=await fetch(`https://api.github.com/repos/${c.owner}/${c.repo}/contents/${path}`,{method:"PUT",headers:{Authorization:"Bearer "+c.token,Accept:"application/vnd.github+json"},body:JSON.stringify({message:msg,content,branch:c.branch||"main"})});
+ if(!r.ok&&r.status!==422)throw new Error(r.status===401||r.status===403?"token rejected":r.status===404?"repo or branch not found":"error "+r.status)}
+let busy=false;
+async function sync(){if(busy)return;const c=LS.get("cfg",{});if(!c.token||!c.owner||!c.repo){status("Add your GitHub details in Settings to sync.",true);return}
+ busy=true;
+ try{for(const e of await qAll()){const {photo,...meta}=e;
+   if(photo){await put(`images/${e.id}.jpg`,photo,"photo "+e.id);meta.photo=`images/${e.id}.jpg`}
+   await put(`entries/${e.date.slice(0,4)}/${e.id}.json`,b64(JSON.stringify(meta,null,2)),"entry "+e.id);
+   await qDel(e.id)}
+  status("Synced to GitHub.")}
+ catch(x){status(`Couldn’t sync (${x.message}). Entries are safe on this device.`,true)}
+ busy=false;count()}
+
+/* save */
+$("#save").onclick=async()=>{const body=$("#body").value.trim();
+ if(!body){status("Write something in the body first.",true);return}
+ const date=$("#date").value,time=$("#time").value;if(!date||!time){status("Pick a date and time, or tap Use now.",true);return}
+ const id=`${date}T${time.replace(":","")}-${Math.random().toString(36).slice(2,6)}`;
+ const e={id,heading:$("#heading").value.trim(),date,time,category:$("#category").value,
+  feeling:(core||touched)?{core,specific,valence:touched?+$("#valence").value:null,arousal:touched?+$("#arousal").value:null}:null,
+  body,photo:photoB64,created:new Date().toISOString()};
+ try{await qPut(e)}catch{status("Couldn’t save on this device. Check browser storage.",true);return}
+ $("#heading").value="";$("#body").value="";$("#photo").value="";$("#preview").style.display="none";photoB64=null;
+ core=specific=null;touched=false;$("#valence").value=0;$("#arousal").value=0;renderFeel();setNow();
+ status("Saved. Syncing…");await count();sync()};
+
+/* settings */
+const dlg=$("#settings");
+$("#openSettings").onclick=()=>{const c=LS.get("cfg",{owner:"tanmaymutha",repo:"if-im-being-honest-data",branch:"main"});
+ $("#owner").value=c.owner||"tanmaymutha";$("#repo").value=c.repo||"if-im-being-honest-data";$("#branch").value=c.branch||"main";$("#token").value=c.token||"";dlg.showModal()};
+$("#cancelS").onclick=()=>dlg.close();
+$("#saveS").onclick=()=>{LS.set("cfg",{owner:$("#owner").value.trim(),repo:$("#repo").value.trim(),branch:$("#branch").value.trim()||"main",token:$("#token").value.trim()});dlg.close();sync()};
+
+/* init */
+setNow();renderCats();renderFeel();count();
+window.addEventListener("online",sync);
+if(LS.get("cfg",{}).token)sync();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
